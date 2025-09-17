@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mainfzylite.js (version 2.0.0) - Fuzzy String Matching Demonstration</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cbb;
+            --accent: #ff6b6b;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: var(--gray);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 900px) {
+            .demo-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .config-panel, .results-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+        }
+        
+        .range-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: var(--light);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .result-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .result-string {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .result-score {
+            display: flex;
+            align-items: center;
+        }
+        
+        .score-bar {
+            height: 8px;
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            margin-right: 10px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background-color: var(--success);
+            border-radius: 4px;
+        }
+        
+        .score-value {
+            font-weight: 600;
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+        }
+        
+        .feature-highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .code-snippet {
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .performance-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>mainfzylite.js</h1>
+            <p class="description">A lightweight JavaScript library for fuzzy string matching with multiple similarity algorithms and customizable parameters.</p>
+        </header>
+        
+        <div class="feature-highlights">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">N-gram Similarity</h3>
+                <p>Uses character n-grams with TF-IDF weighting for robust partial matching.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Levenshtein Distance</h3>
+                <p>Optional Levenshtein distance calculation for edit-based similarity.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3 class="feature-title">Embedding Support</h3>
+                <p>Optional semantic embeddings for advanced similarity detection.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <h3 class="feature-title">Auto-Tuning</h3>
+                <p>Automatically optimizes weights for your specific dataset.</p>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="config-panel">
+                <h2 class="panel-title">Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="dataset">Dataset (one item per line):</label>
+                    <textarea id="dataset" rows="10">apple
+banana
+orange
+strawberry
+blueberry
+raspberry
+blackberry
+kiwi
+mango
+pineapple
+watermelon
+grape
+peach
+pear
+cherry
+plum
+apricot
+pomegranate
+coconut
+papaya</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="searchQuery">Search Query:</label>
+                    <input type="text" id="searchQuery" value="appel" placeholder="Enter search term...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="gramSize">N-gram Size:</label>
+                    <input type="range" id="gramSize" min="1" max="4" step="1" value="2">
+                    <div class="range-values">
+                        <span>1</span>
+                        <span>2</span>
+                        <span>3</span>
+                        <span>4</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="minMatchScore">Minimum Match Score:</label>
+                    <input type="range" id="minMatchScore" min="0" max="1" step="0.05" value="0.3">
+                    <div class="range-values">
+                        <span>0</span>
+                        <span>0.5</span>
+                        <span>1</span>
+                    </div>
+                </div>
+                
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="useLevenshtein" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <label for="useLevenshtein">Use Levenshtein Distance</label>
+                </div>
+                
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="enableEmbedding">
+                        <span class="slider"></span>
+                    </label>
+                    <label for="enableEmbedding">Enable Embeddings (simulated)</label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="weightTfIdf">TF-IDF Weight:</label>
+                    <input type="range" id="weightTfIdf" min="0" max="1" step="0.1" value="0.5">
+                    <div class="range-values">
+                        <span>0</span>
+                        <span>0.5</span>
+                        <span>1</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="weightEmbed">Embedding Weight:</label>
+                    <input type="range" id="weightEmbed" min="0" max="1" step="0.1" value="0.5">
+                    <div class="range-values">
+                        <span>0</span>
+                        <span>0.5</span>
+                        <span>1</span>
+                    </div>
+                </div>
+                
+                <button id="searchButton">Search</button>
+                <button id="autoTuneButton">Auto-Tune Weights</button>
+                
+                <div class="performance-info">
+                    <strong>Performance:</strong>
+                    <div id="performanceData">No search performed yet</div>
+                </div>
+            </div>
+            
+            <div class="results-panel">
+                <h2 class="panel-title">Results</h2>
+                <div id="resultsContainer">
+                    <div class="no-results">Enter a search query to see results</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-snippet">
+            <h3>Implementation Example:</h3>
+            <pre><code>// Initialize the fuzzy search
+const fuzzySearch = new mainfzylite(
+    ['apple', 'banana', 'orange'],
+    { 
+        gramSize: 2, 
+        useLevenshtein: true,
+        minMatchScore: 0.3,
+        enableEmbedding: false
+    }
+);
+
+// Perform a search
+const results = fuzzySearch.get('appl');
+console.log(results);
+// Returns: [{ string: 'apple', score: 0.85 }, ...]
+
+// Auto-tune weights
+await fuzzySearch.autoTuneWeights();</code></pre>
+        </div>
+        
+        <footer>
+            <p>mainfzylite.js (version 2.0) - Lightweight fuzzy string matching library</p>
+            <p>Created with ❤️ for JavaScript developers</p>
+	    <p>develop by mainkod</p>
+	    <p>email: a.rahmansha@gmail.com || https://github.com/mainkod</p>
+        </footer>
+    </div>
+
+    <script>
+        // Include the mainfzylite library code here
+        'use strict';
+
+        class mainfzylite {
+            constructor(arr = [], options = {}) {
+                this.strings = arr.map(s => s.toLowerCase());
+                this.gramSize = options.gramSize || 2;
+                this.useLevenshtein = options.useLevenshtein !== false;
+                this.minMatchScore = options.minMatchScore || 0.3;
+                this.cache = new Map();
+                this.enableEmbedding = options.enableEmbedding || false;
+                this.embeddingDict = options.embeddingDict || {}; // {str: [vec]}
+                
+                // Default weights
+                this.weightTfIdf = options.weightTfIdf ?? 0.5;
+                this.weightEmbed = options.weightEmbed ?? 0.5;
+
+                // TF counts
+                this.tfidf = {};
+                this.docCount = this.strings.length;
+                this.strings.forEach(str => this._indexString(str));
+            }
+
+            // --------------------
+            // Utilities
+            // --------------------
+            _normalize(str) {
+                return str.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+            }
+
+            _ngrams(str, n = this.gramSize) {
+                let s = '-' + str.replace(/[^a-z0-9]+/g, '') + '-';
+                const grams = [];
+                for (let i = 0; i <= s.length - n; i++) grams.push(s.slice(i, i + n));
+                return grams;
+            }
+
+            _indexString(str) {
+                const normalized = this._normalize(str);
+                const grams = this._ngrams(normalized);
+                grams.forEach(g => this.tfidf[g] = (this.tfidf[g] || 0) + 1);
+            }
+
+            _tfidfWeight(gram) {
+                const df = this.tfidf[gram] || 1;
+                return Math.log(1 + this.docCount / df);
+            }
+
+            _levenshtein(a, b) {
+                let m = a.length, n = b.length;
+                if (m === 0) return n === 0 ? 1 : 0;
+                if (n === 0) return 0;
+                let v0 = Array(n + 1).fill(0).map((_, i) => i);
+                let v1 = Array(n + 1).fill(0);
+                for (let i = 0; i < m; i++) {
+                    v1[0] = i + 1;
+                    for (let j = 0; j < n; j++) {
+                        let cost = a[i] === b[j] ? 0 : 1;
+                        v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+                    }
+                    [v0, v1] = [v1, v0];
+                }
+                return 1 - v0[n] / Math.max(m, n);
+            }
+
+            _cosineSim(vecA, vecB) {
+                const allKeys = new Set([...Object.keys(vecA), ...Object.keys(vecB)]);
+                let dot = 0, magA = 0, magB = 0;
+                allKeys.forEach(k => {
+                    const a = vecA[k] || 0, b = vecB[k] || 0;
+                    dot += a * b;
+                    magA += a * a;
+                    magB += b * b;
+                });
+                return magA && magB ? dot / (Math.sqrt(magA) * Math.sqrt(magB)) : 0;
+            }
+
+            _strToVec(str) {
+                const vec = {};
+                this._ngrams(str).forEach(g => {
+                    vec[g] = (vec[g] || 0) + this._tfidfWeight(g);
+                });
+                return vec;
+            }
+
+            _computeSimilarity(query, str) {
+                const normalized = this._normalize(query);
+                const vecQuery = this._strToVec(normalized);
+                const vecStr = this._strToVec(str);
+
+                // TF-IDF cosine similarity
+                let simTf = this._cosineSim(vecQuery, vecStr);
+
+                // Levenshtein similarity
+                let levSim = this.useLevenshtein ? this._levenshtein(normalized, str) : 0;
+
+                // Weighted similarity (TF-IDF + Levenshtein)
+                let finalSim = 0.5 * simTf + 0.5 * levSim;
+
+                // Optional embedding similarity
+                if (this.enableEmbedding && this.embeddingDict[normalized] && this.embeddingDict[str]) {
+                    const emb1 = this.embeddingDict[normalized];
+                    const emb2 = this.embeddingDict[str];
+                    let dot = 0, mag1 = 0, mag2 = 0;
+                    for (let i = 0; i < emb1.length; i++) {
+                        dot += emb1[i] * emb2[i];
+                        mag1 += emb1[i] * emb1[i];
+                        mag2 += emb2[i] * emb2[i];
+                    }
+                    const cosEmb = mag1 && mag2 ? dot / (Math.sqrt(mag1) * Math.sqrt(mag2)) : 0;
+                    finalSim = this.weightTfIdf * finalSim + this.weightEmbed * cosEmb;
+                }
+
+                return finalSim;
+            }
+
+            // --------------------
+            // Public methods
+            // --------------------
+            get(query) {
+                const normalized = this._normalize(query);
+                if (this.cache.has(normalized)) return this.cache.get(normalized);
+
+                const results = [];
+                this.strings.forEach(str => {
+                    const sim = this._computeSimilarity(query, str);
+                    if (sim >= this.minMatchScore) results.push({ string: str, score: sim });
+                });
+
+                results.sort((a, b) => b.score - a.score);
+                this.cache.set(normalized, results);
+                return results;
+            }
+
+            async autoTuneWeights(sampleQueries = []) {
+                if (!sampleQueries.length) sampleQueries = this.strings.slice(0, Math.min(20, this.strings.length));
+                let bestScore = -Infinity;
+                let bestWeights = { tf: this.weightTfIdf, embed: this.weightEmbed };
+                const steps = [0, 0.25, 0.5, 0.75, 1];
+
+                for (const wTf of steps) {
+                    const wEmb = 1 - wTf;
+                    this.weightTfIdf = wTf;
+                    this.weightEmbed = wEmb;
+                    let total = 0;
+                    for (const q of sampleQueries) {
+                        const res = this.get(q);
+                        if (res.length) total += res[0].score;
+                    }
+                    if (total > bestScore) {
+                        bestScore = total;
+                        bestWeights = { tf: wTf, embed: wEmb };
+                    }
+                }
+
+                this.weightTfIdf = bestWeights.tf;
+                this.weightEmbed = bestWeights.embed;
+                console.log("Auto-tuned weights:", this.weightTfIdf, this.weightEmbed);
+                return bestWeights;
+            }
+
+            values() { return this.strings; }
+            length() { return this.strings.length; }
+            isEmpty() { return this.strings.length === 0; }
+        }
+
+        // Demo application code
+        document.addEventListener('DOMContentLoaded', function() {
+            let fuzzySearch;
+            let performanceData = [];
+            
+            // Initialize with default dataset
+            initializeSearch();
+            
+            // Initialize search with current settings
+            function initializeSearch() {
+                const datasetText = document.getElementById('dataset').value;
+                const dataset = datasetText.split('\n').filter(item => item.trim() !== '');
+                
+                const gramSize = parseInt(document.getElementById('gramSize').value);
+                const minMatchScore = parseFloat(document.getElementById('minMatchScore').value);
+                const useLevenshtein = document.getElementById('useLevenshtein').checked;
+                const enableEmbedding = document.getElementById('enableEmbedding').checked;
+                const weightTfIdf = parseFloat(document.getElementById('weightTfIdf').value);
+                const weightEmbed = parseFloat(document.getElementById('weightEmbed').value);
+                
+                // Create a simple simulated embedding dictionary for demonstration
+                const embeddingDict = {};
+                if (enableEmbedding) {
+                    dataset.forEach(item => {
+                        // Create a simple simulated embedding vector
+                        const vec = [];
+                        for (let i = 0; i < 5; i++) {
+                            vec.push(Math.random() * 2 - 1); // Random values between -1 and 1
+                        }
+                        embeddingDict[item.toLowerCase()] = vec;
+                    });
+                }
+                
+                fuzzySearch = new mainfzylite(dataset, {
+                    gramSize,
+                    minMatchScore,
+                    useLevenshtein,
+                    enableEmbedding,
+                    embeddingDict,
+                    weightTfIdf,
+                    weightEmbed
+                });
+                
+                performSearch();
+            }
+            
+            // Perform search with current query
+            function performSearch() {
+                const query = document.getElementById('searchQuery').value;
+                if (!query) {
+                    document.getElementById('resultsContainer').innerHTML = 
+                        '<div class="no-results">Please enter a search query</div>';
+                    return;
+                }
+                
+                const startTime = performance.now();
+                const results = fuzzySearch.get(query);
+                const endTime = performance.now();
+                
+                // Store performance data
+                performanceData.push({
+                    query,
+                    time: endTime - startTime,
+                    results: results.length
+                });
+                
+                updatePerformanceInfo();
+                displayResults(results);
+            }
+            
+            // Update performance information display
+            function updatePerformanceInfo() {
+                if (performanceData.length === 0) return;
+                
+                const lastSearch = performanceData[performanceData.length - 1];
+                const avgTime = performanceData.reduce((sum, data) => sum + data.time, 0) / performanceData.length;
+                
+                document.getElementById('performanceData').innerHTML = `
+                    Last search: ${lastSearch.time.toFixed(2)}ms, ${lastSearch.results} results<br>
+                    Average time: ${avgTime.toFixed(2)}ms over ${performanceData.length} searches
+                `;
+            }
+            
+            // Display results in the UI
+            function displayResults(results) {
+                const resultsContainer = document.getElementById('resultsContainer');
+                
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = '<div class="no-results">No matches found</div>';
+                    return;
+                }
+                
+                let html = '';
+                results.forEach(result => {
+                    const percent = Math.round(result.score * 100);
+                    html += `
+                        <div class="result-item">
+                            <div class="result-string">${result.string}</div>
+                            <div class="result-score">
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: ${percent}%"></div>
+                                </div>
+                                <div class="score-value">${result.score.toFixed(3)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsContainer.innerHTML = html;
+            }
+            
+            // Event listeners
+            document.getElementById('searchButton').addEventListener('click', function() {
+                initializeSearch();
+            });
+            
+            document.getElementById('autoTuneButton').addEventListener('click', async function() {
+                try {
+                    const weights = await fuzzySearch.autoTuneWeights();
+                    document.getElementById('weightTfIdf').value = weights.tf;
+                    document.getElementById('weightEmbed').value = weights.embed;
+                    
+                    // Update the display to show the new weights
+                    document.getElementById('weightTfIdf').dispatchEvent(new Event('input'));
+                    document.getElementById('weightEmbed').dispatchEvent(new Event('input'));
+                    
+                    performSearch();
+                } catch (error) {
+                    console.error('Auto-tuning failed:', error);
+                }
+            });
+            
+            // Add input event listeners for real-time updates
+            document.getElementById('searchQuery').addEventListener('input', performSearch);
+            document.getElementById('gramSize').addEventListener('input', function() {
+                document.getElementById('gramSize').nextElementSibling.querySelector('span:nth-child(2)').textContent = this.value;
+                initializeSearch();
+            });
+            document.getElementById('minMatchScore').addEventListener('input', function() {
+                document.getElementById('minMatchScore').nextElementSibling.querySelector('span:nth-child(2)').textContent = this.value;
+                initializeSearch();
+            });
+            document.getElementById('useLevenshtein').addEventListener('change', initializeSearch);
+            document.getElementById('enableEmbedding').addEventListener('change', initializeSearch);
+            document.getElementById('weightTfIdf').addEventListener('input', function() {
+                document.getElementById('weightTfIdf').nextElementSibling.querySelector('span:nth-child(2)').textContent = this.value;
+                initializeSearch();
+            });
+            document.getElementById('weightEmbed').addEventListener('input', function() {
+                document.getElementById('weightEmbed').nextElementSibling.querySelector('span:nth-child(2)').textContent = this.value;
+                initializeSearch();
+            });
+            
+            // Initialize range value displays
+            document.getElementById('gramSize').dispatchEvent(new Event('input'));
+            document.getElementById('minMatchScore').dispatchEvent(new Event('input'));
+            document.getElementById('weightTfIdf').dispatchEvent(new Event('input'));
+            document.getElementById('weightEmbed').dispatchEvent(new Event('input'));
+        });
+    </script>
+</body>
+</html>
