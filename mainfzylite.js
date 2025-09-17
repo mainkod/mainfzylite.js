@@ -1,5 +1,7 @@
 // mainfzylite.js
 // version 2.0.0
+// By: https://github.com/mainkod/mainfzylite.js
+// Email: a.rahmansha@gmail.com
 
 'use strict';
 
